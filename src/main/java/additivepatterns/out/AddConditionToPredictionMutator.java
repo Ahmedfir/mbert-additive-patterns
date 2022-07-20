@@ -1,7 +1,7 @@
-package additivepatterns;
+package additivepatterns.out;
 
-import additivepatterns.out.BaseCodePiece;
-import additivepatterns.out.CodePiece;
+import additivepatterns.out.BasePredicate;
+import additivepatterns.out.MaskedPredicate;
 import edu.lu.uni.serval.jdt.tree.ITree;
 import edu.lu.uni.serval.tbar.context.ContextReader;
 import edu.lu.uni.serval.tbar.utils.Checker;
@@ -16,19 +16,20 @@ public class AddConditionToPredictionMutator {
 
 
     List<String> triedExpCands = new ArrayList<>();
-    private final CodePiece targetPredicate;
+    private final MaskedPredicate targetMaskedPredicate;
     private final ITree suspStmtAst;
 
     public AddConditionToPredictionMutator(ITree suspStmtAst, int lineNumber, String javaFilePath) {
         ITree suspPredicateExp;
-        if (Checker.isDoStatement(suspStmtAst.getType())) {
+        int astStmtType = suspStmtAst.getType();
+        if (Checker.isDoStatement(astStmtType)) {
             List<ITree> children = suspStmtAst.getChildren();
             suspPredicateExp = children.get(children.size() - 1);
         } else {// If, while, return statement.
             suspPredicateExp = suspStmtAst.getChild(0);
         }
         this.suspStmtAst = suspStmtAst;
-        this.targetPredicate = new CodePiece(javaFilePath, suspPredicateExp, lineNumber);
+        this.targetMaskedPredicate = new MaskedPredicate(javaFilePath, suspPredicateExp, lineNumber, astStmtType);
     }
 
     private boolean shouldSkipPredicate(String suspPredicateExpStr, String predicateExpCandidateStr) {
@@ -41,12 +42,12 @@ public class AddConditionToPredictionMutator {
 
     public void generatePatches(Map<ITree, Integer> allPredicateExpressions, String fileContent) {
 
-        String targetPredicateStr = targetPredicate.getCodeString(fileContent);
-        List<String> targetPredicateVars = targetPredicate.getVariables();
+        String targetPredicateStr = targetMaskedPredicate.getCodeString(fileContent);
+        List<String> targetPredicateVars = targetMaskedPredicate.getVariables();
 
         for (Map.Entry<ITree, Integer> entry : allPredicateExpressions.entrySet()) {
 
-            BaseCodePiece newPredicate = new BaseCodePiece(entry.getKey());
+            BasePredicate newPredicate = new BasePredicate(entry.getKey());
             String newPredicateStr = newPredicate.getCodeString(fileContent);
             if (shouldSkipPredicate(targetPredicateStr, newPredicateStr)) continue;
             triedExpCands.add(newPredicateStr);
@@ -54,7 +55,7 @@ public class AddConditionToPredictionMutator {
             List<String> newPredicateVars = newPredicate.getVariables();
             newPredicateVars.retainAll(targetPredicateVars);
             if (newPredicateVars.isEmpty()) continue;
-            targetPredicate.addMaskedPredicates(newPredicate, fileContent);
+            targetMaskedPredicate.addMaskedPredicates(newPredicate, fileContent);
         }
 
         if (!Checker.isIfStatement(suspStmtAst.getType())) return;
@@ -68,7 +69,7 @@ public class AddConditionToPredictionMutator {
         List<String> allVarNamesList = new ArrayList<>();
 
         // todo pass a dictionary to win some performance - use a new version of Tbar.
-        ContextReader.readAllVariablesAndFields(suspStmtAst, allVarNamesMap, varTypesMap, allVarNamesList, targetPredicate.javaFilePath);
+        ContextReader.readAllVariablesAndFields(suspStmtAst, allVarNamesMap, varTypesMap, allVarNamesList, targetMaskedPredicate.javaFilePath);
 
         for (String var : vars) {
             String varType = varTypesMap.get(var);
@@ -77,13 +78,13 @@ public class AddConditionToPredictionMutator {
             varList.remove(var);
             if (varList.isEmpty()) continue;
             String[] operators = selectOperators(varType);
-            targetPredicate.addMaskedVarsOpsPredicates(var, varList, operators, fileContent);
+            targetMaskedPredicate.addMaskedVarsOpsPredicates(var, varList, operators, fileContent);
         }
     }
 
 
-    public CodePiece getTargetPredicate() {
-        return targetPredicate;
+    public MaskedPredicate getTargetPredicate() {
+        return targetMaskedPredicate;
     }
 
 

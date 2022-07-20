@@ -1,31 +1,35 @@
-package additivepatterns;
+package additivepatterns.out;
 
 
 import additivepatterns.AstParsing.AstParser;
 import additivepatterns.AstParsing.AstParsingUtils;
 import additivepatterns.AstParsing.TbarLoadPredicates;
-import additivepatterns.out.CodePiece;
 import edu.lu.uni.serval.entity.Pair;
 import edu.lu.uni.serval.jdt.tree.ITree;
 import edu.lu.uni.serval.tbar.context.ContextReader;
 import edu.lu.uni.serval.tbar.utils.Checker;
 import edu.lu.uni.serval.tbar.utils.FileHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.io.Serializable;
+import java.util.*;
 
-public class AddConditionToPredictionFileRequest {
+public class AddConditionToPredictionFileRequest implements Serializable {
+
+    private transient static Logger log = LoggerFactory.getLogger(AstParser.class);
 
     private File javaFile;
+    private Set<MaskedPredicate> allMaskedPredicates;
 
     public AddConditionToPredictionFileRequest(File javaFile) {
         this.javaFile = javaFile;
+        this.allMaskedPredicates = new HashSet<>();
     }
 
-
     public void generateMaskedPatches() {
+        log.info("attempt to generate masked predicates from " + javaFile);
         // string java file content.
         String fileContent = FileHelper.readFile(javaFile);
         // ast parsing.
@@ -36,7 +40,7 @@ public class AddConditionToPredictionFileRequest {
         // all file predicates
         Map<ITree, Integer> allPredicateExpressions = TbarLoadPredicates.identifyPredicateExpressions(ast.get(0).firstElement);
 
-        List<CodePiece> allPathches = new ArrayList<>();
+
         // looping through the ast
         for (Pair<ITree, AstParser.AstNode> p : ast) {
             ITree scn = p.firstElement;
@@ -58,22 +62,26 @@ public class AddConditionToPredictionFileRequest {
 
                         AddConditionToPredictionMutator mutator = new AddConditionToPredictionMutator(scn, astScn.startLine, astScn.file.getPath());
                         mutator.generatePatches(allPredicateExpressions, fileContent);
-
-                        allPathches.add(mutator.getTargetPredicate());
-
+                        MaskedPredicate pred = mutator.getTargetPredicate();
+                        if (pred.hasMaskedPredicates()) {
+                            allMaskedPredicates.add(pred);
+                        }
                     }
                 }
             }
 
-            for (CodePiece predicate : allPathches) {
-                System.out.println(predicate.newMaskedPredicates.size() + " in line +" + predicate.lineNumber
-                        + " -------- [ " + predicate.start + "," + predicate.end + "]");
-                System.out.println("p b ==  " + predicate.getCodeString(fileContent));
-                for (String maskedP : predicate.newMaskedPredicates) {
-                    System.out.println("p m ==  " + maskedP);
+        }
+
+        log.info("finished: " + allMaskedPredicates.size() + " predicates will be mutated in " + javaFile);
+        if (log.isTraceEnabled()) {
+            for (MaskedPredicate maskedPredicate : allMaskedPredicates) {
+                log.trace(maskedPredicate.newMaskedPredicates.size() + " in line +" + maskedPredicate.lineNumber
+                        + " -------- [ " + maskedPredicate.start + "," + maskedPredicate.end + "]");
+                log.trace("p b ==  " + maskedPredicate.getCodeString(fileContent));
+                for (String maskedP : maskedPredicate.newMaskedPredicates) {
+                    log.trace("p m ==  " + maskedP);
                 }
             }
-            System.out.println("patches = " + allPathches.size());
         }
     }
 }

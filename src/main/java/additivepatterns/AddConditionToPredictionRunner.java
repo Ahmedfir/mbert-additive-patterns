@@ -1,28 +1,30 @@
 package additivepatterns;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import additivepatterns.AstParsing.AstParser;
+import additivepatterns.cli.CliRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Arrays;
 
 public class AddConditionToPredictionRunner {
 
-    private final List<AddConditionToPredictionFileRequest> fileRequests;
+    private static Logger log = LoggerFactory.getLogger(AstParser.class);
 
-    public AddConditionToPredictionRunner(List<File> javaFiles) {
-        assert javaFiles != null && !javaFiles.isEmpty();
-        fileRequests = new ArrayList<>();
-        for (File javaFile : javaFiles) {
-            if (javaFile == null || !javaFile.exists()) {
-                System.out.println("null or not existing file " + javaFile);
-                continue;
-            }
-            fileRequests.add(new AddConditionToPredictionFileRequest(javaFile));
-        }
-    }
-
-    public void generateMaskedPatches(){
-        for (AddConditionToPredictionFileRequest fr : fileRequests){
-            fr.generateMaskedPatches();
+    public static void main(String...args){
+        try {
+            CliRequest cliRequest = CliRequest.parseArgs(args);
+            System.out.println("--- Initialisation --- \n" + cliRequest + "\n -----------------");
+            cliRequest.generateMaskedPatches().outputResults();
+        } catch (Throwable throwable) {
+            System.err.println("Failed = " + Arrays.toString(args));
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            throwable.printStackTrace(pw);
+            System.err.println(sw);
+            System.exit(100);
         }
     }
 

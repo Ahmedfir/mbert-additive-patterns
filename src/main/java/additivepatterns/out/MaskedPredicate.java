@@ -4,27 +4,22 @@ import edu.lu.uni.serval.jdt.tree.ITree;
 
 import java.util.*;
 
-public class CodePiece extends BaseCodePiece {
-    public final String javaFilePath;
+/**
+ * This class defines a predicate and its new {@code newMaskedPredicates}.
+ * @see BasePredicate
+ */
+public class MaskedPredicate extends BasePredicate {
+    public transient final String javaFilePath;
     public final int lineNumber;
-    public Set<String> newMaskedPredicates = new HashSet<>();
+    private final int astStmtType;
+    public final Set<String> newMaskedPredicates;
 
-    public CodePiece(ITree astTree, int start, int end, String javaFilePath, int lineNumber) {
-        super(astTree, start, end);
-        this.javaFilePath = javaFilePath;
-        this.lineNumber = lineNumber;
-    }
-
-    public CodePiece(ITree astTree, String javaFilePath, int lineNumber) {
+    public MaskedPredicate(String javaFilePath, ITree astTree, int lineNumber, int astStmtType) {
         super(astTree);
         this.javaFilePath = javaFilePath;
         this.lineNumber = lineNumber;
-    }
-
-    public CodePiece(String javaFilePath, ITree astTree, int lineNumber) {
-        super(astTree);
-        this.javaFilePath = javaFilePath;
-        this.lineNumber = lineNumber;
+        this.astStmtType = astStmtType;
+        this.newMaskedPredicates = new HashSet<>();
     }
 
     public void concatPredicates(String oldP, String newP, boolean withInverse) {
@@ -36,7 +31,11 @@ public class CodePiece extends BaseCodePiece {
         newMaskedPredicates.add("(" + oldP + ") || (" + newP + ")");
     }
 
-    public void addMaskedPredicates(BaseCodePiece codePiece, String fileContent) {
+    public boolean hasMaskedPredicates(){
+        return !newMaskedPredicates.isEmpty();
+    }
+
+    public void addMaskedPredicates(BasePredicate codePiece, String fileContent) {
         String originalString = getCodeString(fileContent);
         List<String> originalPredicateMaskedStrings = generateMaskedCodes(fileContent);
         String newString = codePiece.getCodeString(fileContent);
@@ -78,12 +77,12 @@ public class CodePiece extends BaseCodePiece {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
-        CodePiece codePiece = (CodePiece) o;
-        return lineNumber == codePiece.lineNumber && Objects.equals(javaFilePath, codePiece.javaFilePath);
+        MaskedPredicate codePiece = (MaskedPredicate) o;
+        return lineNumber == codePiece.lineNumber && astStmtType == codePiece.astStmtType && Objects.equals(javaFilePath, codePiece.javaFilePath);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), javaFilePath, lineNumber);
+        return Objects.hash(super.hashCode(), javaFilePath, lineNumber, astStmtType);
     }
 }

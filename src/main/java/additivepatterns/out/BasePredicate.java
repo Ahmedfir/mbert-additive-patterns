@@ -4,26 +4,21 @@ import edu.lu.uni.serval.jdt.tree.ITree;
 import edu.lu.uni.serval.tbar.context.ContextReader;
 import edu.lu.uni.serval.tbar.utils.Checker;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class BaseCodePiece {
+public class BasePredicate implements Serializable {
 
-    public static final String MASK = "<mask>";
-    public final ITree astTree;
+    public static transient final String MASK = "<mask>";
+    public transient final ITree astTree;
+    private transient List<String> maskedCodes;
     public final int start;
     public final int end;
-    private List<String> maskedCodes;
     private String codeString;
 
-    public BaseCodePiece(ITree astTree, int start, int end) {
-        this.astTree = astTree;
-        this.start = start;
-        this.end = end;
-    }
-
-    public BaseCodePiece(ITree astTree) {
+    public BasePredicate(ITree astTree) {
         this.start = astTree.getPos();
         this.end = this.start + astTree.getLength();
         this.astTree = astTree;
@@ -87,12 +82,12 @@ public class BaseCodePiece {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        BaseCodePiece that = (BaseCodePiece) o;
-        return start == that.start && end == that.end && Objects.equals(astTree, that.astTree);
+        BasePredicate that = (BasePredicate) o;
+        return start == that.start && end == that.end && Objects.equals(astTree, that.astTree) && Objects.equals(codeString, that.codeString);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(astTree, start, end);
+        return Objects.hash(astTree, start, end, codeString);
     }
 }
