@@ -1,15 +1,21 @@
 package additivepatterns.cli;
 
+import additivepatterns.out.AddConditionToPredictionFileRequest;
+import additivepatterns.out.BasePredicate;
+import additivepatterns.out.MaskedPredicate;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import statistics.A;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -42,7 +48,20 @@ public class CliRequestTest {
         String[] req = {"-in=" + file_1 , "-out=" + outDir};
         CliRequest cliRequest = CliRequest.parseArgs(req);
         cliRequest.generateMaskedPatches().outputResults();
-        assertTrue("The files differ!", FileUtils.contentEquals(expectedFile, outFile));
+        assertTrue(outFile.exists());
+        assertEquals(1, cliRequest.fileRequests.size());
+
+        List<MaskedPredicate> allpredicates = new ArrayList<>();
+        List<String> allMaskedPredicates = new ArrayList<>();
+        for (AddConditionToPredictionFileRequest fileRequest : cliRequest.fileRequests) {
+            allpredicates.addAll(fileRequest.getAllMaskedPredicates());
+            for (MaskedPredicate allMaskedPredicate : fileRequest.getAllMaskedPredicates()) {
+                allMaskedPredicates.addAll(allMaskedPredicate.newMaskedPredicates);
+            }
+        }
+
+        assertEquals(34, allpredicates.size());
+        assertEquals(3736, allMaskedPredicates.size());
     }
 
     @AfterClass

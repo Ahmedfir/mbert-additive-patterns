@@ -20,12 +20,16 @@ public class AddConditionToPredictionFileRequest implements Serializable {
 
     private transient static Logger log = LoggerFactory.getLogger(AstParser.class);
 
-    private File javaFile;
-    private Set<MaskedPredicate> allMaskedPredicates;
+    private final File javaFile;
+    private final Set<MaskedPredicate> allMaskedPredicates;
 
     public AddConditionToPredictionFileRequest(File javaFile) {
         this.javaFile = javaFile;
         this.allMaskedPredicates = new HashSet<>();
+    }
+
+    public Set<MaskedPredicate> getAllMaskedPredicates() {
+        return allMaskedPredicates;
     }
 
     public void generateMaskedPatches() {
