@@ -1,6 +1,10 @@
 package additivepatterns.out;
 
+import additivepatterns.AstParsing.AstParser;
 import edu.lu.uni.serval.jdt.tree.ITree;
+import edu.lu.uni.serval.tbar.utils.Checker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -9,10 +13,13 @@ import java.util.*;
  * @see BasePredicate
  */
 public class MaskedPredicate extends BasePredicate {
+    private static Logger log = LoggerFactory.getLogger(AstParser.class);
     public transient final String javaFilePath;
     public final int lineNumber;
     private final int astStmtType;
     public final Set<String> newMaskedPredicates;
+    private final int methodStartPos;
+    private final int methodEndPos;
 
     public MaskedPredicate(String javaFilePath, ITree astTree, int lineNumber, int astStmtType) {
         super(astTree);
@@ -20,6 +27,18 @@ public class MaskedPredicate extends BasePredicate {
         this.lineNumber = lineNumber;
         this.astStmtType = astStmtType;
         this.newMaskedPredicates = new HashSet<>();
+        ITree t = astTree.getParent();
+        while (t != null && !Checker.isMethodDeclaration(t.getType())) {
+            t = t.getParent();
+        }
+        if (t == null) {
+            log.error("failed to load parent method in line :" + lineNumber);
+            this.methodStartPos = -1;
+            this.methodEndPos = -1;
+        } else {
+            this.methodStartPos = t.getPos();
+            this.methodEndPos = this.methodStartPos + t.getLength();
+        }
     }
 
     public void concatPredicates(String oldP, String newP, boolean withInverse) {

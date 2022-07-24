@@ -1,13 +1,11 @@
 package additivepatterns.cli;
 
 import additivepatterns.out.AddConditionToPredictionFileRequest;
-import additivepatterns.out.BasePredicate;
 import additivepatterns.out.MaskedPredicate;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import statistics.A;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,6 +64,6 @@ public class CliRequestTest {
 
     @AfterClass
     public static void afterClass() throws Exception {
-        FileUtils.deleteDirectory(outputDir.toFile());
+       FileUtils.deleteDirectory(outputDir.toFile());
     }
 }

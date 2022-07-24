@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * @see {edu.lu.uni.serval.ibir.localisation.AstParser}
  * @See {edu.lu.uni.serval.tbar.utils.SuspiciousCodeParser}
+ * @see {edu.lu.uni.serval.ibir.localisation.AstParser}
  */
 public class AstParser {
 
@@ -113,7 +113,7 @@ public class AstParser {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             AstNode astNode = (AstNode) o;
-            return startPos == astNode.startPos && endPos == astNode.endPos && Objects.equals(file, astNode.file) ;
+            return startPos == astNode.startPos && endPos == astNode.endPos && Objects.equals(file, astNode.file);
         }
 
         @Override

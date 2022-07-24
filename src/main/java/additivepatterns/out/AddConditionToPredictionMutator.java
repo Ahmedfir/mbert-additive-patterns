@@ -1,7 +1,5 @@
 package additivepatterns.out;
 
-import additivepatterns.out.BasePredicate;
-import additivepatterns.out.MaskedPredicate;
 import edu.lu.uni.serval.jdt.tree.ITree;
 import edu.lu.uni.serval.tbar.context.ContextReader;
 import edu.lu.uni.serval.tbar.utils.Checker;
