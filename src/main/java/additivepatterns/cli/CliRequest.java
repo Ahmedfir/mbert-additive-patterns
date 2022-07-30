@@ -1,6 +1,7 @@
 package additivepatterns.cli;
 
 import additivepatterns.out.AddConditionToPredictionFileRequest;
+import additivepatterns.out.RequestsOutput;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +31,7 @@ public class CliRequest {
             "-in=source_file_name:method_name@line@line@line:method_name@line@line@line \n" +
             "-in=source_file_name::line@line@line \n" +
             "-out=locations_directory\n";
-
-    final List<AddConditionToPredictionFileRequest> fileRequests;
+    final RequestsOutput requestsOutput;
     final String outputDir;
     private Gson gson;
 
@@ -68,14 +68,14 @@ public class CliRequest {
     }
 
     private CliRequest(List<AddConditionToPredictionFileRequest> fileRequests, String outputDir) {
-        this.fileRequests = fileRequests;
+        this.requestsOutput = new RequestsOutput(fileRequests);
         this.outputDir = outputDir;
 
     }
 
 
     public CliRequest generateMaskedPatches(){
-        for (AddConditionToPredictionFileRequest fr : fileRequests){
+        for (AddConditionToPredictionFileRequest fr : requestsOutput.getFileRequests()){
             fr.generateMaskedPatches();
         }
         return this;
@@ -90,13 +90,13 @@ public class CliRequest {
             String statsFilePath = Paths.get(outputDir).resolve(locationsFileName).toString();
             System.out.println("printing_json_results in " + statsFilePath);
             FileWriter writer = new FileWriter(statsFilePath);
-            gson.toJson(fileRequests, writer);
+            gson.toJson(requestsOutput, writer);
             writer.flush();
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
             System.err.println("++++");
-            System.err.println(gson.toJson(fileRequests));
+            System.err.println(gson.toJson(requestsOutput));
         }
     }
 
@@ -125,7 +125,7 @@ public class CliRequest {
     @Override
     public String toString() {
         return "CliRequest{" +
-                "fileRequests=" + fileRequests +
+                "fileRequests=" + requestsOutput +
                 ", outputDir='" + outputDir + '\'' +
                 '}';
     }

@@ -47,11 +47,11 @@ public class CliRequestTest {
         CliRequest cliRequest = CliRequest.parseArgs(req);
         cliRequest.generateMaskedPatches().outputResults();
         assertTrue(outFile.exists());
-        assertEquals(1, cliRequest.fileRequests.size());
+        assertEquals(1, cliRequest.requestsOutput.getFileRequests().size());
 
         List<MaskedPredicate> allpredicates = new ArrayList<>();
         List<String> allMaskedPredicates = new ArrayList<>();
-        for (AddConditionToPredictionFileRequest fileRequest : cliRequest.fileRequests) {
+        for (AddConditionToPredictionFileRequest fileRequest : cliRequest.requestsOutput.getFileRequests()) {
             allpredicates.addAll(fileRequest.getAllMaskedPredicates());
             for (MaskedPredicate allMaskedPredicate : fileRequest.getAllMaskedPredicates()) {
                 allMaskedPredicates.addAll(allMaskedPredicate.newMaskedPredicates);
