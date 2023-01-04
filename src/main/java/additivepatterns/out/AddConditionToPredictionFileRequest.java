@@ -19,6 +19,7 @@ import java.util.*;
 public class AddConditionToPredictionFileRequest implements Serializable {
 
     private transient static Logger log = LoggerFactory.getLogger(AstParser.class);
+    private static final boolean FAIL_ON_EMPTY_AST = Boolean.getBoolean("fail_empty_ast");
 
     private final File javaFile;
     private final Set<MaskedPredicate> allMaskedPredicates;
@@ -39,7 +40,14 @@ public class AddConditionToPredictionFileRequest implements Serializable {
         // ast parsing.
         List<Pair<ITree, AstParser.AstNode>> ast = new AstParser().parseSuspiciousCode(javaFile);
         if (ast.isEmpty()) {
-            System.err.println("Empty AST: " + javaFile);
+            String msg = "Empty AST: " + javaFile;
+            IllegalArgumentException exception = new IllegalArgumentException(msg);
+            if (FAIL_ON_EMPTY_AST){
+                throw exception;
+            } else {
+                System.err.println(msg);
+                return;
+            }
         }
         // all file predicates
         Map<ITree, Integer> allPredicateExpressions = TbarLoadPredicates.identifyPredicateExpressions(ast.get(0).firstElement);
@@ -58,7 +66,7 @@ public class AddConditionToPredictionFileRequest implements Serializable {
             for (Integer contInfo : contextInfoList) {
                 if (!distinctContextInfo.contains(contInfo) && !Checker.isBlock(contInfo)) { // no redundancy + no blocks.
                     distinctContextInfo.add(contInfo);
-                    // if + do + while + retrun boolean stmts.
+                    // if + do + while + retrun boolean stmts. --> add conditions.
                     if (Checker.isIfStatement(contInfo)
                             || Checker.isDoStatement(contInfo)
                             || Checker.isWhileStatement(contInfo)
@@ -71,6 +79,8 @@ public class AddConditionToPredictionFileRequest implements Serializable {
                             allMaskedPredicates.add(pred);
                         }
                     }
+                    //
+                    //RemovingMutator removingMutator = new RemovingMutator(scn, astScn.startLine, astScn.file.getPath());
                 }
             }
 
